@@ -1,83 +1,69 @@
-import { useState } from 'react'
-import Header from './components/Header'
-import ProductGrid from './components/ProductGrid'
-import StoreList from './components/StoreList'
-import Footer from './components/Footer'
+import { useMemo, useState } from 'react'
+import Header from './components/layout/Header'
+import Footer from './components/layout/Footer'
+import HomeSection from './components/sections/HomeSection'
+import LoginSection from './components/sections/LoginSection'
+import RegisterSection from './components/sections/RegisterSection'
+import UserProfileSection from './components/sections/UserProfileSection'
+import SellerPanelSection from './components/sections/SellerPanelSection'
+import { products, sellerProducts, stores } from './data/mockData'
 import './App.css'
 
 function App() {
   const [fontSize, setFontSize] = useState(14)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentSection, setCurrentSection] = useState('home')
+  const [user, setUser] = useState(null)
 
-  // Datos de ejemplo de productos
-  const products = [
-    {
-      id: '69dece3d2945a6c44d8084d4',
-      name: 'Lavadora Samsung - EDIT',
-      price: 150000,
-      image: 'https://via.placeholder.com/300x300?text=Lavadora+Samsung',
-    },
-    {
-      id: '1',
-      name: 'Refrigerador LG',
-      price: 450000,
-      image: 'https://via.placeholder.com/300x300?text=Refrigerador+LG',
-    },
-    {
-      id: '2',
-      name: 'Horno Electrolux',
-      price: 250000,
-      image: 'https://via.placeholder.com/300x300?text=Horno+Electrolux',
-    },
-  ]
-
-  // Datos de ejemplo de tiendas
-  const stores = [
-    {
-      id: 1,
-      name: 'Lavadoras y más',
-      image: 'https://via.placeholder.com/300x200?text=Lavadoras+y+mas',
-    },
-    {
-      id: 2,
-      name: 'Electrodomésticos Central',
-      image: 'https://via.placeholder.com/300x200?text=Electrodomesticos',
-    },
-    {
-      id: 3,
-      name: 'Centro Técnico',
-      image: 'https://via.placeholder.com/300x200?text=Centro+Tecnico',
-    },
-  ]
-
-  const handleFontSizeChange = (size) => {
-    setFontSize(size)
-  }
-
-  const handleLogin = () => {
-    setIsLoggedIn(true)
-  }
-
-  const handleLogout = () => {
-    setIsLoggedIn(false)
-  }
+  const sectionContent = useMemo(() => {
+    switch (currentSection) {
+      case 'login':
+        return (
+          <LoginSection
+            onLogin={(loggedUser) => {
+              setUser(loggedUser)
+              setCurrentSection('profile')
+            }}
+          />
+        )
+      case 'register':
+        return (
+          <RegisterSection
+            onRegister={() => {
+              setCurrentSection('login')
+            }}
+          />
+        )
+      case 'profile':
+        return (
+          <UserProfileSection
+            user={user}
+            onNavigateToLogin={() => setCurrentSection('login')}
+          />
+        )
+      case 'seller':
+        return <SellerPanelSection user={user} sellerProducts={sellerProducts} />
+      case 'home':
+      default:
+        return <HomeSection products={products} stores={stores} />
+    }
+  }, [currentSection, user])
 
   return (
-    <div style={{ '--base-font-size': `${fontSize}px` }}>
-      <Header 
+    <div className="app-shell" style={{ '--base-font-size': `${fontSize}px` }}>
+      <Header
         fontSize={fontSize}
-        onFontSizeChange={handleFontSizeChange}
-        onLogin={handleLogin}
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        onFontSizeChange={setFontSize}
+        isLoggedIn={Boolean(user)}
+        onLogout={() => {
+          setUser(null)
+          setCurrentSection('home')
+        }}
+        currentSection={currentSection}
+        onSectionChange={setCurrentSection}
       />
 
-      <main id="maincontent">
-        <h1 className="page-title">Bienvenido a Zofri</h1>
-        
-        <ProductGrid products={products} />
-        
-        <StoreList stores={stores} />
+      <main id="maincontent" className="main-content">
+        {sectionContent}
       </main>
 
       <Footer />

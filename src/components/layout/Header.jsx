@@ -1,0 +1,83 @@
+import '../../styles/Header.css'
+
+const sections = [
+  { key: 'home', label: 'Inicio' },
+  { key: 'login', label: 'Login' },
+  { key: 'register', label: 'Registro' },
+  { key: 'profile', label: 'Perfil de usuario' },
+  { key: 'seller', label: 'Panel vendedor' },
+]
+
+export default function Header({
+  fontSize,
+  onFontSizeChange,
+  isLoggedIn,
+  onLogout,
+  currentSection,
+  onSectionChange,
+}) {
+  return (
+    <>
+      <a href="#maincontent" className="skip-link">Saltar al contenido</a>
+
+      <header className="topbar" style={{ '--base-font-size': `${fontSize}px` }}>
+        <div className="left">
+          <button type="button" className="brand-link" onClick={() => onSectionChange('home')}>
+            Zofri
+          </button>
+        </div>
+
+        <nav className="main-nav" aria-label="Secciones principales">
+          {sections.map((section) => (
+            <button
+              key={section.key}
+              type="button"
+              className={`nav-button${currentSection === section.key ? ' is-active' : ''}`}
+              onClick={() => onSectionChange(section.key)}
+            >
+              {section.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="right">
+          <button
+            id="userMenu"
+            type="button"
+            className="user-button"
+            onClick={() => (isLoggedIn ? onLogout() : onSectionChange('login'))}
+          >
+            {isLoggedIn ? 'Cerrar sesion' : 'Iniciar sesion'}
+          </button>
+
+          <div className="font-controls" role="group" aria-label="Controles de tamano de fuente">
+            <button
+              type="button"
+              aria-label="Disminuir tamano de letra"
+              aria-pressed={fontSize === 12}
+              onClick={() => onFontSizeChange(12)}
+            >
+              A-
+            </button>
+            <button
+              type="button"
+              aria-label="Tamano normal"
+              aria-pressed={fontSize === 14}
+              onClick={() => onFontSizeChange(14)}
+            >
+              A
+            </button>
+            <button
+              type="button"
+              aria-label="Aumentar tamano de letra"
+              aria-pressed={fontSize === 16}
+              onClick={() => onFontSizeChange(16)}
+            >
+              A+
+            </button>
+          </div>
+        </div>
+      </header>
+    </>
+  )
+}
