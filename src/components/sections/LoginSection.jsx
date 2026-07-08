@@ -1,14 +1,28 @@
 import { useState } from 'react'
 
-export default function LoginSection({ onLogin }) {
+const sampleAccounts = [
+  { label: 'Cuenta comprador', email: 'compra@demo.cl' },
+  { label: 'Cuenta vendedor', email: 'seller@demo.cl' },
+]
+
+export default function LoginSection({ onLogin, onNavigateToRegister }) {
   const [form, setForm] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
+  const [remember, setRemember] = useState(false)
 
   const handleSubmit = (event) => {
     event.preventDefault()
+    if (!form.email || !form.password) {
+      setError('Completa correo y contrasena para continuar.')
+      return
+    }
+
+    setError('')
     onLogin({
       name: 'Usuario Demo',
       email: form.email,
       role: form.email.includes('seller') ? 'seller' : 'buyer',
+      remember,
     })
   }
 
@@ -36,6 +50,28 @@ export default function LoginSection({ onLogin }) {
 
         <button type="submit">Ingresar</button>
       </form>
+
+      <div className="section-card" style={{ marginTop: '1rem' }}>
+        <h2>Cuentas de ejemplo</h2>
+        <ul className="seller-list">
+          {sampleAccounts.map((account) => (
+            <li key={account.email}>
+              <span>{account.label}</span>
+              <span>{account.email}</span>
+            </li>
+          ))}
+        </ul>
+        {error ? <p role="alert">{error}</p> : null}
+        <label className="login-remember">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+          />
+          Recordarme
+        </label>
+        <button type="button" onClick={onNavigateToRegister}>Ir a registro</button>
+      </div>
     </section>
   )
 }

@@ -23,6 +23,7 @@ function App() {
               setUser(loggedUser)
               setCurrentSection('profile')
             }}
+            onNavigateToRegister={() => setCurrentSection('register')}
           />
         )
       case 'register':
@@ -44,7 +45,7 @@ function App() {
         return <SellerPanelSection user={user} sellerProducts={sellerProducts} />
       case 'home':
       default:
-        return <HomeSection products={products} stores={stores} />
+        return <HomeSection products={products} stores={stores} onNavigate={setCurrentSection} />
     }
   }, [currentSection, user])
 

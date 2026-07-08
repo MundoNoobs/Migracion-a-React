@@ -1,5 +1,23 @@
 import { useState } from 'react'
 
+const fields = [
+  { id: 'register-name', label: 'Nombre completo', type: 'text', key: 'name' },
+  { id: 'register-email', label: 'Correo', type: 'email', key: 'email' },
+  { id: 'register-password', label: 'Contrasena', type: 'password', key: 'password' },
+  {
+    id: 'register-confirm-password',
+    label: 'Confirmar contrasena',
+    type: 'password',
+    key: 'confirmPassword',
+  },
+]
+
+const requirements = [
+  'Usa un correo valido.',
+  'La contrasena debe coincidir.',
+  'La cuenta quedara lista para entrar al perfil.',
+]
+
 export default function RegisterSection({ onRegister }) {
   const [form, setForm] = useState({
     name: '',
@@ -7,13 +25,16 @@ export default function RegisterSection({ onRegister }) {
     password: '',
     confirmPassword: '',
   })
+  const [error, setError] = useState('')
 
   const handleSubmit = (event) => {
     event.preventDefault()
     if (form.password !== form.confirmPassword) {
+      setError('Las contrasenas no coinciden.')
       return
     }
 
+    setError('')
     onRegister({
       name: form.name,
       email: form.email,
@@ -24,46 +45,33 @@ export default function RegisterSection({ onRegister }) {
     <section className="section-block section-form" aria-labelledby="register-title">
       <h1 id="register-title" className="page-title">Registro</h1>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="register-name">Nombre completo</label>
-        <input
-          id="register-name"
-          type="text"
-          required
-          value={form.name}
-          onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-        />
-
-        <label htmlFor="register-email">Correo</label>
-        <input
-          id="register-email"
-          type="email"
-          required
-          value={form.email}
-          onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-        />
-
-        <label htmlFor="register-password">Contrasena</label>
-        <input
-          id="register-password"
-          type="password"
-          required
-          value={form.password}
-          onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-        />
-
-        <label htmlFor="register-confirm-password">Confirmar contrasena</label>
-        <input
-          id="register-confirm-password"
-          type="password"
-          required
-          value={form.confirmPassword}
-          onChange={(event) =>
-            setForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
-          }
-        />
+        {fields.map((field) => (
+          <div key={field.id}>
+            <label htmlFor={field.id}>{field.label}</label>
+            <input
+              id={field.id}
+              type={field.type}
+              required
+              value={form[field.key]}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, [field.key]: event.target.value }))
+              }
+            />
+          </div>
+        ))}
 
         <button type="submit">Crear cuenta</button>
       </form>
+
+      <div className="section-card" style={{ marginTop: '1rem' }}>
+        <h2>Requisitos de registro</h2>
+        <ul className="seller-list">
+          {requirements.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        {error ? <p role="alert">{error}</p> : null}
+      </div>
     </section>
   )
 }

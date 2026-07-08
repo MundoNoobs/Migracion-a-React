@@ -104,6 +104,28 @@
   border-radius: 6px;
 }
 
+.home-highlight + .home-highlight {
+  margin-top: 0.75rem;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.home-actions button,
+.login-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-remember {
+  margin: 0.5rem 0 0;
+}
+
 @media (max-width: 768px) {
   .page-title {
     font-size: 1.6rem;
