@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ProductGrid from '../catalog/ProductGrid'
 import StoreList from '../catalog/StoreList'
+
+const ARTICLES_PER_PAGE = 20
 
 const highlights = [
   {
@@ -20,6 +22,34 @@ const highlights = [
 export default function HomeSection({ products, stores, currentUser, onNavigate, onCheckout }) {
   const [cartItems, setCartItems] = useState([])
   const [feedback, setFeedback] = useState('')
+  const [selectedStoreEmail, setSelectedStoreEmail] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const selectedStore = useMemo(
+    () => stores.find((store) => store.email === selectedStoreEmail) ?? null,
+    [selectedStoreEmail, stores],
+  )
+
+  const visibleProducts = useMemo(() => {
+    if (!selectedStoreEmail) {
+      return products
+    }
+
+    return products.filter((product) => product.ownerEmail === selectedStoreEmail)
+  }, [products, selectedStoreEmail])
+
+  const totalPages = Math.max(1, Math.ceil(visibleProducts.length / ARTICLES_PER_PAGE))
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE
+    return visibleProducts.slice(startIndex, startIndex + ARTICLES_PER_PAGE)
+  }, [currentPage, visibleProducts])
 
   const cartTotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
@@ -72,17 +102,21 @@ export default function HomeSection({ products, stores, currentUser, onNavigate,
   }
 
   const handleOpenStore = (store) => {
-    if (!currentUser) {
-      onNavigate('login')
-      return
-    }
+    setSelectedStoreEmail(store.email)
+    setCurrentPage(1)
+    setFeedback(`Mostrando los articulos de ${store.name}.`)
+  }
 
-    setFeedback(`Tienda seleccionada: ${store.name}`)
+  const handleBackToHome = () => {
+    setSelectedStoreEmail('')
+    setCurrentPage(1)
+    setFeedback('Mostrando articulos de todas las tiendas.')
   }
 
   const quickActions = currentUser
     ? [
         { key: 'profile', label: 'Ver perfil' },
+        { key: 'home', label: 'Inicio' },
         ...(currentUser.role === 'admin' ? [{ key: 'admin', label: 'Panel administrador' }] : []),
         ...(currentUser.role === 'seller' ? [{ key: 'seller', label: 'Abrir panel vendedor' }] : []),
       ]
@@ -90,6 +124,7 @@ export default function HomeSection({ products, stores, currentUser, onNavigate,
         { key: 'login', label: 'Ir a login' },
         { key: 'register', label: 'Ir a registro' },
         { key: 'profile', label: 'Ver perfil' },
+        { key: 'home', label: 'Inicio' },
         { key: 'seller', label: 'Abrir panel vendedor' },
       ]
 
@@ -105,7 +140,11 @@ export default function HomeSection({ products, stores, currentUser, onNavigate,
         ))}
         <div className="home-actions">
           {quickActions.map((action) => (
-            <button key={action.key} type="button" onClick={() => onNavigate(action.key)}>
+            <button
+              key={action.key}
+              type="button"
+              onClick={() => (action.key === 'home' ? handleBackToHome() : onNavigate(action.key))}
+            >
               {action.label}
             </button>
           ))}
@@ -113,7 +152,43 @@ export default function HomeSection({ products, stores, currentUser, onNavigate,
       </div>
       {feedback ? <p className="section-feedback">{feedback}</p> : null}
 
-      <ProductGrid products={products} onAddToCart={handleAddToCart} currentUser={currentUser} />
+      <section id="products-section" className="section-block section-block-compact" aria-labelledby="products-title">
+        <div className="section-card">
+          <h2 id="products-title">Articulos</h2>
+          <p>
+            {selectedStore
+              ? `Mostrando articulos de ${selectedStore.name}.`
+              : 'Aqui aparecen todos los articulos publicados por las tiendas activas.'}
+          </p>
+          {selectedStore ? (
+            <button type="button" onClick={handleBackToHome}>
+              Ver todos los articulos
+            </button>
+          ) : null}
+        </div>
+
+        <ProductGrid
+          products={paginatedProducts}
+          onAddToCart={handleAddToCart}
+          currentUser={currentUser}
+          emptyMessage={selectedStore ? 'Esta tienda no tiene articulos publicados.' : 'No hay articulos publicados aun.'}
+        />
+
+        {totalPages > 1 ? (
+          <div className="pagination-controls" aria-label="Paginacion de articulos">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={currentPage === page ? 'is-active' : ''}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
       <div className="section-card">
         <h2>Carrito de compras</h2>

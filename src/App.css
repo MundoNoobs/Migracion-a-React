@@ -42,6 +42,10 @@
   padding: 1.5rem 1rem 2rem;
 }
 
+.section-block-compact {
+  padding-top: 0;
+}
+
 .page-title {
   margin: 0;
   padding: 0 0 1rem;
@@ -60,6 +64,15 @@
 
 .section-card p {
   margin: 0.5rem 0;
+}
+
+.profile-image {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 2px solid var(--border-color);
+  background: var(--surface-card);
 }
 
 .section-card button {
@@ -186,6 +199,30 @@
 
 .section-card button + button {
   margin-left: 0.5rem;
+}
+
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+}
+
+.pagination-controls button {
+  min-width: 42px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--surface-card);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.pagination-controls button.is-active {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: #fff;
 }
 
 @media (max-width: 768px) {

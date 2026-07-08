@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   products: 'zofri-products',
   orders: 'zofri-orders',
   session: 'zofri-session',
+  sessionTemp: 'zofri-session-temp',
   theme: 'zofri-theme',
 }
 
@@ -37,8 +38,7 @@ const LEGACY_STORE_NAMES = [
 
 const safeParse = (value, fallback) => {
   try {
-    const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? parsed : fallback
+    return JSON.parse(value)
   } catch {
     return fallback
   }
@@ -71,11 +71,20 @@ const removeStorage = (key) => {
 
 export const initializeAppStorage = () => {
   const existingUsers = readStorage(STORAGE_KEYS.users, null)
-  const users = existingUsers ?? seedUsers
-  const rawProducts = readStorage(STORAGE_KEYS.products, null) ?? seedProducts
+  const users = Array.isArray(existingUsers) ? existingUsers : seedUsers
+
+  const existingProducts = readStorage(STORAGE_KEYS.products, null)
+  const rawProducts = Array.isArray(existingProducts) ? existingProducts : seedProducts
   const products = rawProducts.filter((product) => !LEGACY_PRODUCT_NAMES.includes(product.name))
-  const orders = readStorage(STORAGE_KEYS.orders, [])
-  const session = readStorage(STORAGE_KEYS.session, null)
+  const existingOrders = readStorage(STORAGE_KEYS.orders, [])
+  const orders = Array.isArray(existingOrders) ? existingOrders : []
+
+  const persistentSession = readStorage(STORAGE_KEYS.session, null)
+  const temporarySession =
+    typeof window !== 'undefined'
+      ? safeParse(window.sessionStorage.getItem(STORAGE_KEYS.sessionTemp), null)
+      : null
+  const session = persistentSession || temporarySession
 
   if (!existingUsers) {
     writeStorage(STORAGE_KEYS.users, users)
@@ -102,4 +111,26 @@ export const storageApi = {
   readStorage,
   writeStorage,
   removeStorage,
+  writeSession: (session, remember) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    if (remember) {
+      writeStorage(STORAGE_KEYS.session, session)
+      window.sessionStorage.removeItem(STORAGE_KEYS.sessionTemp)
+      return
+    }
+
+    removeStorage(STORAGE_KEYS.session)
+    window.sessionStorage.setItem(STORAGE_KEYS.sessionTemp, JSON.stringify(session))
+  },
+  clearSession: () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    removeStorage(STORAGE_KEYS.session)
+    window.sessionStorage.removeItem(STORAGE_KEYS.sessionTemp)
+  },
 }

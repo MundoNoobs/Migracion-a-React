@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import '../../styles/ProductGrid.css'
 
-export default function ProductGrid({ products, onAddToCart, currentUser }) {
+export default function ProductGrid({ products, onAddToCart, currentUser, emptyMessage = 'No hay productos disponibles.' }) {
   const [quantities, setQuantities] = useState({})
 
   const handleAdd = (product) => {
@@ -11,6 +11,7 @@ export default function ProductGrid({ products, onAddToCart, currentUser }) {
 
   return (
     <section id="products" className="grid" aria-live="polite">
+      {products.length === 0 ? <p className="grid-empty">{emptyMessage}</p> : null}
       {products.map((product) => (
         <article key={product.id} className="card">
           <img src={product.image} alt={product.name} />

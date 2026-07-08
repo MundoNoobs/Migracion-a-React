@@ -22,9 +22,7 @@ import './App.css'
 function App() {
   const [bootstrap] = useState(() => initializeAppStorage())
   const [fontSize, setFontSize] = useState(14)
-  const [theme, setTheme] = useState(
-    () => storageApi.readStorage(storageApi.keys.theme, ['light'])[0] ?? 'light',
-  )
+  const [theme, setTheme] = useState(() => storageApi.readStorage(storageApi.keys.theme, 'light'))
   const [currentSection, setCurrentSection] = useState('home')
   const [users, setUsers] = useState(bootstrap.users)
   const [products, setProducts] = useState(bootstrap.products)
@@ -44,19 +42,22 @@ function App() {
   }, [orders, products, users])
 
   useEffect(() => {
-    if (sessionEmail && rememberMe) {
-      storageApi.writeStorage(storageApi.keys.session, {
-        email: sessionEmail,
-        remember: rememberMe,
-      })
+    if (sessionEmail) {
+      storageApi.writeSession(
+        {
+          email: sessionEmail,
+          remember: rememberMe,
+        },
+        rememberMe,
+      )
       return
     }
 
-    storageApi.removeStorage(storageApi.keys.session)
+    storageApi.clearSession()
   }, [rememberMe, sessionEmail])
 
   useEffect(() => {
-    storageApi.writeStorage(storageApi.keys.theme, [theme])
+    storageApi.writeStorage(storageApi.keys.theme, theme)
   }, [theme])
 
   const navigateToSection = (section) => {
@@ -114,6 +115,7 @@ function App() {
   const handleLogout = () => {
     setSessionEmail(null)
     setRememberMe(false)
+    storageApi.clearSession()
     setCurrentSection('home')
   }
 
@@ -153,6 +155,7 @@ function App() {
       email,
       password,
       role: 'buyer',
+      profileImage: '',
     }
 
     setUsers((previous) => [...previous, newUser])
@@ -208,7 +211,7 @@ function App() {
     return { ok: true, message: 'Vendedor creado correctamente.' }
   }
 
-  const handleUpdateProfile = ({ name, email, password }) => {
+  const handleUpdateProfile = ({ name, email, password, profileImage }) => {
     if (!currentUser) {
       return { ok: false, message: 'Debes iniciar sesion.' }
     }
@@ -243,7 +246,13 @@ function App() {
     setUsers((previous) =>
       previous.map((candidate) =>
         candidate.id === currentUser.id
-          ? { ...candidate, name, email, password }
+          ? {
+              ...candidate,
+              name,
+              email,
+              password,
+              profileImage: profileImage ?? candidate.profileImage ?? '',
+            }
           : candidate,
       ),
     )
@@ -422,10 +431,13 @@ function App() {
   )
 
   const sellerUserMap = useMemo(
-    () => users.filter((user) => user.role === 'seller').reduce((accumulator, seller) => {
-      accumulator[seller.email] = seller
-      return accumulator
-    }, {}),
+    () =>
+      users
+        .filter((user) => user.role === 'seller')
+        .reduce((accumulator, seller) => {
+          accumulator[seller.email] = seller
+          return accumulator
+        }, {}),
     [users],
   )
 
@@ -447,7 +459,9 @@ function App() {
         .map((seller) => ({
           id: seller.id,
           name: seller.name,
-          image: seller.profileImage || `https://via.placeholder.com/300x200?text=${encodeURIComponent(seller.name)}`,
+          image:
+            seller.profileImage ||
+            `https://via.placeholder.com/300x200?text=${encodeURIComponent(seller.name)}`,
           email: seller.email,
         }))
         .filter((seller) => !bootstrap.legacyStoreNames?.includes(seller.name)),
@@ -497,9 +511,7 @@ function App() {
           />
         )
       case 'admin':
-        return (
-          <AdminPanelSection users={users} onCreateSeller={handleCreateSeller} />
-        )
+        return <AdminPanelSection users={users} onCreateSeller={handleCreateSeller} />
       case 'home':
       default:
         return (

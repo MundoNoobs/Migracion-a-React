@@ -6,6 +6,17 @@
   padding: 2rem;
 }
 
+.grid-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1.5rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: var(--surface-card);
+  color: var(--muted-text);
+  text-align: center;
+}
+
 .grid .card {
   border: 1px solid var(--border-color);
   border-radius: 8px;

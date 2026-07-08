@@ -16,7 +16,7 @@ export default function UserProfileSection({
   onMarkDelivered,
 }) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', profileImage: '' })
   const [message, setMessage] = useState('')
   const profileData = useMemo(() => {
     if (!user) {
@@ -27,6 +27,7 @@ export default function UserProfileSection({
       name: user.name,
       email: user.email,
       password: user.password,
+      profileImage: user.profileImage || '',
       role: user.role,
     }
   }, [user])
@@ -40,8 +41,25 @@ export default function UserProfileSection({
       name: user.name,
       email: user.email,
       password: user.password,
+      profileImage: user.profileImage || '',
     })
   }, [user])
+
+  const handleFileUpload = (event) => {
+    const [file] = event.target.files || []
+    if (!file) {
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm((previous) => ({
+        ...previous,
+        profileImage: typeof reader.result === 'string' ? reader.result : '',
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSave = (event) => {
     event.preventDefault()
@@ -94,6 +112,14 @@ export default function UserProfileSection({
         <div className="section-card">
           {!editing ? (
             <>
+              {profileData?.profileImage ? (
+                <img
+                  className="profile-image"
+                  src={profileData.profileImage}
+                  alt={`Foto de perfil de ${profileData.name}`}
+                />
+              ) : null}
+
               {profileBlocks.map((item) => (
                 <p key={item.key}>
                   <strong>{item.label}:</strong>{' '}
@@ -160,6 +186,28 @@ export default function UserProfileSection({
                   setForm((previous) => ({ ...previous, password: event.target.value }))
                 }
               />
+
+              <label htmlFor="profile-image-url">Imagen (link)</label>
+              <input
+                id="profile-image-url"
+                type="url"
+                value={form.profileImage}
+                onChange={(event) =>
+                  setForm((previous) => ({ ...previous, profileImage: event.target.value }))
+                }
+              />
+
+              <label htmlFor="profile-image-file">Imagen desde archivo</label>
+              <input
+                id="profile-image-file"
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+              />
+
+              {form.profileImage ? (
+                <img className="profile-image" src={form.profileImage} alt="Vista previa" />
+              ) : null}
 
               <button type="submit">Guardar cambios</button>
               <button type="button" onClick={() => setEditing(false)}>
