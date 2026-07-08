@@ -1,19 +1,22 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const profileBlocks = [
   { key: 'name', label: 'Nombre' },
   { key: 'email', label: 'Correo' },
+  { key: 'password', label: 'Contraseña' },
   { key: 'role', label: 'Rol' },
 ]
 
-const activityList = [
-  'Ultimo acceso: hoy',
-  'Pedidos pendientes: 2',
-  'Favoritos guardados: 5',
-]
-
-export default function UserProfileSection({ user, onNavigateToLogin }) {
+export default function UserProfileSection({
+  user,
+  orders,
+  onNavigateToLogin,
+  onSaveProfile,
+  onMarkDelivered,
+}) {
   const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [message, setMessage] = useState('')
   const profileData = useMemo(() => {
     if (!user) {
       return null
@@ -26,6 +29,31 @@ export default function UserProfileSection({ user, onNavigateToLogin }) {
     }
   }, [user])
 
+  useEffect(() => {
+    if (!user) {
+      return
+    }
+
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: user.password,
+    })
+  }, [user])
+
+  const handleSave = (event) => {
+    event.preventDefault()
+    const result = onSaveProfile(form)
+
+    setMessage(result.message)
+
+    if (result.ok) {
+      setEditing(false)
+    }
+  }
+
+  const maskPassword = (value) => '*'.repeat(Math.max(6, value?.length ?? 0))
+
   return (
     <section className="section-block" aria-labelledby="profile-title">
       <h1 id="profile-title" className="page-title">Perfil de usuario</h1>
@@ -37,24 +65,84 @@ export default function UserProfileSection({ user, onNavigateToLogin }) {
         </div>
       ) : (
         <div className="section-card">
-          {profileBlocks.map((item) => (
-            <p key={item.key}>
-              <strong>{item.label}:</strong> {profileData[item.key]}
-            </p>
-          ))}
+          {!editing ? (
+            <>
+              {profileBlocks.map((item) => (
+                <p key={item.key}>
+                  <strong>{item.label}:</strong>{' '}
+                  {item.key === 'password'
+                    ? maskPassword(profileData?.password)
+                    : profileData[item.key]}
+                </p>
+              ))}
 
-          <h2>Actividad reciente</h2>
-          <ul className="seller-list">
-            {activityList.map((activity) => (
-              <li key={activity}>{activity}</li>
-            ))}
-          </ul>
+              <h2>Compras realizadas</h2>
+              {orders.length === 0 ? (
+                <p>No tienes compras registradas.</p>
+              ) : (
+                <ul className="seller-list">
+                  {orders.map((order) => (
+                    <li key={order.id}>
+                      <span>Estado: {order.status}</span>
+                      <span>Cliente: {order.customerName}</span>
+                      <span>Total: ${order.total.toLocaleString('es-CL')}</span>
+                      <ul className="order-item-list">
+                        {order.items.map((item) => (
+                          <li key={item.productId}>
+                            {item.name} x{item.quantity} - ${item.unitPrice.toLocaleString('es-CL')}
+                          </li>
+                        ))}
+                      </ul>
+                      {order.status !== 'entregado' ? (
+                        <button type="button" onClick={() => onMarkDelivered(order.id)}>
+                          Marcar como entregado
+                        </button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-          <button type="button" onClick={() => setEditing((current) => !current)}>
-            {editing ? 'Cerrar edicion' : 'Editar perfil'}
-          </button>
+              <button type="button" onClick={() => setEditing(true)}>
+                Editar perfil
+              </button>
+              {message ? <p role="status">{message}</p> : null}
+            </>
+          ) : (
+            <form className="section-form-inline" onSubmit={handleSave}>
+              <label htmlFor="profile-name">Nombre</label>
+              <input
+                id="profile-name"
+                type="text"
+                value={form.name}
+                onChange={(event) => setForm((previous) => ({ ...previous, name: event.target.value }))}
+              />
 
-          {editing ? <p>Modo edicion activo. Aqui se conectaria un formulario real.</p> : null}
+              <label htmlFor="profile-email">Correo</label>
+              <input
+                id="profile-email"
+                type="email"
+                value={form.email}
+                onChange={(event) => setForm((previous) => ({ ...previous, email: event.target.value }))}
+              />
+
+              <label htmlFor="profile-password">Contraseña</label>
+              <input
+                id="profile-password"
+                type="password"
+                value={form.password}
+                onChange={(event) =>
+                  setForm((previous) => ({ ...previous, password: event.target.value }))
+                }
+              />
+
+              <button type="submit">Guardar cambios</button>
+              <button type="button" onClick={() => setEditing(false)}>
+                Cancelar
+              </button>
+              {message ? <p role="status">{message}</p> : null}
+            </form>
+          )}
         </div>
       )}
     </section>

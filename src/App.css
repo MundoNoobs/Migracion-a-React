@@ -77,6 +77,19 @@
   font-size: 1rem;
 }
 
+.section-form-inline {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.section-form-inline input,
+.section-form-inline select {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #bfc5cc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
 .section-form button {
   margin-top: 0.25rem;
   padding: 0.65rem 0.9rem;
@@ -104,6 +117,20 @@
   border-radius: 6px;
 }
 
+.seller-list li button,
+.seller-list li select {
+  width: fit-content;
+}
+
+.order-item-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1rem;
+}
+
+.order-item-list li {
+  margin: 0.15rem 0;
+}
+
 .home-highlight + .home-highlight {
   margin-top: 0.75rem;
 }
@@ -124,6 +151,19 @@
 
 .login-remember {
   margin: 0.5rem 0 0;
+}
+
+.section-feedback {
+  max-width: 700px;
+  margin: 0.5rem auto;
+  padding: 0.75rem 1rem;
+  background: #eef6ff;
+  border: 1px solid #cfe4ff;
+  border-radius: 8px;
+}
+
+.section-card button + button {
+  margin-left: 0.5rem;
 }
 
 @media (max-width: 768px) {

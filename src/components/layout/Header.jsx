@@ -1,21 +1,29 @@
 import '../../styles/Header.css'
 
-const sections = [
-  { key: 'home', label: 'Inicio' },
-  { key: 'login', label: 'Login' },
-  { key: 'register', label: 'Registro' },
-  { key: 'profile', label: 'Perfil de usuario' },
-  { key: 'seller', label: 'Panel vendedor' },
-]
-
 export default function Header({
   fontSize,
-  onFontSizeChange,
   isLoggedIn,
+  currentUser,
+  onFontSizeChange,
   onLogout,
   currentSection,
   onSectionChange,
 }) {
+  const navigationSections = [
+    { key: 'home', label: 'Inicio' },
+    { key: 'login', label: 'Login' },
+    { key: 'register', label: 'Registro' },
+    { key: 'profile', label: 'Perfil de usuario' },
+  ]
+
+  if (currentUser && ['seller', 'admin'].includes(currentUser.role)) {
+    navigationSections.push({ key: 'seller', label: 'Panel vendedor' })
+  }
+
+  if (currentUser?.role === 'admin') {
+    navigationSections.push({ key: 'admin', label: 'Panel administrador' })
+  }
+
   return (
     <>
       <a href="#maincontent" className="skip-link">Saltar al contenido</a>
@@ -28,7 +36,7 @@ export default function Header({
         </div>
 
         <nav className="main-nav" aria-label="Secciones principales">
-          {sections.map((section) => (
+          {navigationSections.map((section) => (
             <button
               key={section.key}
               type="button"

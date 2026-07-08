@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import ProductGrid from '../catalog/ProductGrid'
 import StoreList from '../catalog/StoreList'
 
@@ -23,7 +24,60 @@ const quickActions = [
   { key: 'seller', label: 'Abrir panel vendedor' },
 ]
 
-export default function HomeSection({ products, stores, onNavigate }) {
+export default function HomeSection({ products, stores, currentUser, onNavigate, onCheckout }) {
+  const [cartItems, setCartItems] = useState([])
+  const [feedback, setFeedback] = useState('')
+
+  const cartTotal = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [cartItems],
+  )
+
+  const handleAddToCart = (product, quantity) => {
+    if (!currentUser) {
+      onNavigate('login')
+      return { ok: false, message: 'Debes iniciar sesion para comprar.' }
+    }
+
+    const existingItem = cartItems.find((item) => item.product.id === product.id)
+    const currentQuantity = existingItem ? existingItem.quantity : 0
+
+    if (product.stock < currentQuantity + quantity) {
+      setFeedback('No hay stock suficiente para esa cantidad.')
+      return { ok: false, message: 'No hay stock suficiente.' }
+    }
+
+    setCartItems((previous) => {
+      const itemExists = previous.find((item) => item.product.id === product.id)
+
+      if (itemExists) {
+        return previous.map((item) =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item,
+        )
+      }
+
+      return [...previous, { product, quantity }]
+    })
+
+    setFeedback(`${product.name} agregado al carrito.`)
+    return { ok: true }
+  }
+
+  const handleRemoveFromCart = (productId) => {
+    setCartItems((previous) => previous.filter((item) => item.product.id !== productId))
+  }
+
+  const handleCheckout = () => {
+    const result = onCheckout(cartItems)
+    setFeedback(result.message)
+
+    if (result.ok) {
+      setCartItems([])
+    }
+  }
+
   return (
     <section className="section-block" aria-labelledby="home-title">
       <h1 id="home-title" className="page-title">Bienvenido a Zofri</h1>
@@ -42,7 +96,34 @@ export default function HomeSection({ products, stores, onNavigate }) {
           ))}
         </div>
       </div>
-      <ProductGrid products={products} />
+      {feedback ? <p className="section-feedback">{feedback}</p> : null}
+
+      <ProductGrid products={products} onAddToCart={handleAddToCart} currentUser={currentUser} />
+
+      <div className="section-card">
+        <h2>Carrito de compras</h2>
+        {cartItems.length === 0 ? (
+          <p>No hay productos agregados.</p>
+        ) : (
+          <>
+            <ul className="seller-list">
+              {cartItems.map((item) => (
+                <li key={item.product.id}>
+                  <span>{item.product.name}</span>
+                  <span>Cantidad: {item.quantity}</span>
+                  <span>${(item.product.price * item.quantity).toLocaleString('es-CL')}</span>
+                  <button type="button" onClick={() => handleRemoveFromCart(item.product.id)}>
+                    Quitar
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p><strong>Total:</strong> ${cartTotal.toLocaleString('es-CL')}</p>
+            <button type="button" onClick={handleCheckout}>Comprar carrito</button>
+          </>
+        )}
+      </div>
+
       <StoreList stores={stores} />
     </section>
   )

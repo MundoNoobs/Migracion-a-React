@@ -1,10 +1,5 @@
 import { useState } from 'react'
 
-const sampleAccounts = [
-  { label: 'Cuenta comprador', email: 'compra@demo.cl' },
-  { label: 'Cuenta vendedor', email: 'seller@demo.cl' },
-]
-
 export default function LoginSection({ onLogin, onNavigateToRegister }) {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
@@ -12,18 +7,18 @@ export default function LoginSection({ onLogin, onNavigateToRegister }) {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (!form.email || !form.password) {
-      setError('Completa correo y contrasena para continuar.')
+    const result = onLogin({
+      email: form.email,
+      password: form.password,
+      remember,
+    })
+
+    if (!result.ok) {
+      setError(result.message)
       return
     }
 
     setError('')
-    onLogin({
-      name: 'Usuario Demo',
-      email: form.email,
-      role: form.email.includes('seller') ? 'seller' : 'buyer',
-      remember,
-    })
   }
 
   return (
@@ -52,15 +47,8 @@ export default function LoginSection({ onLogin, onNavigateToRegister }) {
       </form>
 
       <div className="section-card" style={{ marginTop: '1rem' }}>
-        <h2>Cuentas de ejemplo</h2>
-        <ul className="seller-list">
-          {sampleAccounts.map((account) => (
-            <li key={account.email}>
-              <span>{account.label}</span>
-              <span>{account.email}</span>
-            </li>
-          ))}
-        </ul>
+        <h2>Acceso local</h2>
+        <p>Solo pueden ingresar usuarios existentes en el almacenamiento local.</p>
         {error ? <p role="alert">{error}</p> : null}
         <label className="login-remember">
           <input

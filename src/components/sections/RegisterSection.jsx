@@ -29,16 +29,28 @@ export default function RegisterSection({ onRegister }) {
 
   const handleSubmit = (event) => {
     event.preventDefault()
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+      setError('Completa todos los campos.')
+      return
+    }
+
     if (form.password !== form.confirmPassword) {
       setError('Las contrasenas no coinciden.')
       return
     }
 
-    setError('')
-    onRegister({
+    const result = onRegister({
       name: form.name,
       email: form.email,
+      password: form.password,
     })
+
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
+
+    setError('')
   }
 
   return (
@@ -65,6 +77,7 @@ export default function RegisterSection({ onRegister }) {
 
       <div className="section-card" style={{ marginTop: '1rem' }}>
         <h2>Requisitos de registro</h2>
+        <p>Solo compradores pueden crear su cuenta desde aqui. Los vendedores se crean en el panel de administrador.</p>
         <ul className="seller-list">
           {requirements.map((item) => (
             <li key={item}>{item}</li>
