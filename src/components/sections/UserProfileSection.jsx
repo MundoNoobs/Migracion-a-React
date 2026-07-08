@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { validateEmail, validateName, validatePassword, validateRequiredFields } from '../../utils/validators'
 
 const profileBlocks = [
   { key: 'name', label: 'Nombre' },
@@ -25,6 +26,7 @@ export default function UserProfileSection({
     return {
       name: user.name,
       email: user.email,
+      password: user.password,
       role: user.role,
     }
   }, [user])
@@ -43,6 +45,31 @@ export default function UserProfileSection({
 
   const handleSave = (event) => {
     event.preventDefault()
+
+    const requiredValidation = validateRequiredFields(form, ['name', 'email', 'password'])
+    if (!requiredValidation.ok) {
+      setMessage(requiredValidation.message)
+      return
+    }
+
+    const nameValidation = validateName(form.name)
+    if (!nameValidation.ok) {
+      setMessage(nameValidation.message)
+      return
+    }
+
+    const emailValidation = validateEmail(form.email)
+    if (!emailValidation.ok) {
+      setMessage(emailValidation.message)
+      return
+    }
+
+    const passwordValidation = validatePassword(form.password)
+    if (!passwordValidation.ok) {
+      setMessage(passwordValidation.message)
+      return
+    }
+
     const result = onSaveProfile(form)
 
     setMessage(result.message)
@@ -70,9 +97,7 @@ export default function UserProfileSection({
               {profileBlocks.map((item) => (
                 <p key={item.key}>
                   <strong>{item.label}:</strong>{' '}
-                  {item.key === 'password'
-                    ? maskPassword(profileData?.password)
-                    : profileData[item.key]}
+                  {item.key === 'password' ? maskPassword(profileData?.password) : profileData[item.key]}
                 </p>
               ))}
 

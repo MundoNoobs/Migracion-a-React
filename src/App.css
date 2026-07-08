@@ -6,12 +6,29 @@
   --border-color: #ddd;
   --surface: #fff;
   --surface-alt: #f5f6f8;
+  --surface-card: #ffffff;
+  --muted-text: #5f6b77;
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 .app-shell {
   min-height: 100vh;
   background: var(--surface);
   color: var(--text-color);
+  font-size: var(--base-font-size);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.app-shell.dark {
+  --primary-color: #6aa8ff;
+  --primary-dark: #4f90ee;
+  --text-color: #e7ebf0;
+  --border-color: #2b3642;
+  --surface: #0f1720;
+  --surface-alt: #16212b;
+  --surface-card: #1b2733;
+  --muted-text: #a4b1bd;
+  --shadow-color: rgba(0, 0, 0, 0.45);
 }
 
 .main-content {
@@ -112,8 +129,8 @@
   display: grid;
   gap: 0.25rem;
   padding: 0.75rem;
-  background: #fff;
-  border: 1px solid #dce1e7;
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
@@ -160,6 +177,11 @@
   background: #eef6ff;
   border: 1px solid #cfe4ff;
   border-radius: 8px;
+}
+
+.app-shell.dark .section-feedback {
+  background: #1a2c3d;
+  border-color: #365977;
 }
 
 .section-card button + button {

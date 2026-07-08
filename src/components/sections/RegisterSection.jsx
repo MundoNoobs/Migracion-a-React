@@ -1,4 +1,11 @@
 import { useState } from 'react'
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePasswordMatch,
+  validateRequiredFields,
+} from '../../utils/validators'
 
 const fields = [
   { id: 'register-name', label: 'Nombre completo', type: 'text', key: 'name' },
@@ -29,13 +36,37 @@ export default function RegisterSection({ onRegister }) {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
-      setError('Completa todos los campos.')
+
+    const requiredValidation = validateRequiredFields(
+      form,
+      ['name', 'email', 'password', 'confirmPassword'],
+    )
+    if (!requiredValidation.ok) {
+      setError(requiredValidation.message)
       return
     }
 
-    if (form.password !== form.confirmPassword) {
-      setError('Las contrasenas no coinciden.')
+    const nameValidation = validateName(form.name)
+    if (!nameValidation.ok) {
+      setError(nameValidation.message)
+      return
+    }
+
+    const emailValidation = validateEmail(form.email)
+    if (!emailValidation.ok) {
+      setError(emailValidation.message)
+      return
+    }
+
+    const passwordValidation = validatePassword(form.password)
+    if (!passwordValidation.ok) {
+      setError(passwordValidation.message)
+      return
+    }
+
+    const matchValidation = validatePasswordMatch(form.password, form.confirmPassword)
+    if (!matchValidation.ok) {
+      setError(matchValidation.message)
       return
     }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { validateEmail, validateRequiredFields } from '../../utils/validators'
 
 export default function LoginSection({ onLogin, onNavigateToRegister }) {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -7,6 +8,19 @@ export default function LoginSection({ onLogin, onNavigateToRegister }) {
 
   const handleSubmit = (event) => {
     event.preventDefault()
+
+    const requiredValidation = validateRequiredFields(form, ['email', 'password'])
+    if (!requiredValidation.ok) {
+      setError(requiredValidation.message)
+      return
+    }
+
+    const emailValidation = validateEmail(form.email)
+    if (!emailValidation.ok) {
+      setError(emailValidation.message)
+      return
+    }
+
     const result = onLogin({
       email: form.email,
       password: form.password,

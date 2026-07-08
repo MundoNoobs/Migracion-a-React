@@ -17,6 +17,7 @@ export default function ProductGrid({ products, onAddToCart, currentUser }) {
           <h4>{product.name}</h4>
           <p>${product.price.toLocaleString('es-CL')}</p>
           <p>Stock: {product.stock}</p>
+          <p>Vende: {product.sellerName}</p>
           <label className="product-quantity">
             Cantidad
             <input

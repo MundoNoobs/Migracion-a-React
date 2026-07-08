@@ -1,11 +1,12 @@
 /* Footer Styles */
 .footer {
-  background-color: #333;
-  color: white;
+  background-color: var(--surface-alt);
+  color: var(--text-color);
   text-align: center;
   padding: 2rem;
   margin-top: 2rem;
   font-size: 0.9rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .footer a {

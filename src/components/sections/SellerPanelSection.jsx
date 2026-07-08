@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { validateProductPayload } from '../../utils/validators'
 
 const productFields = [
   { id: 'seller-product-name', label: 'Nombre', key: 'name', type: 'text' },
@@ -24,7 +25,7 @@ export default function SellerPanelSection({
   onDeleteProduct,
   onUpdateOrderStatus,
 }) {
-  const isSeller = user?.role === 'seller' || user?.role === 'admin'
+  const isSeller = user?.role === 'seller'
   const [activeTab, setActiveTab] = useState('products')
   const [form, setForm] = useState(emptyForm)
   const [editingProductId, setEditingProductId] = useState(null)
@@ -66,14 +67,22 @@ export default function SellerPanelSection({
   const handleSubmit = (event) => {
     event.preventDefault()
 
+    const payload = {
+      name: form.name,
+      price: Number(form.price),
+      stock: Number(form.stock),
+      image: form.image,
+    }
+
+    const productValidation = validateProductPayload(payload)
+    if (!productValidation.ok) {
+      setMessage(productValidation.message)
+      return
+    }
+
     const result = onCreateProduct({
       productId: editingProductId,
-      product: {
-        name: form.name,
-        price: Number(form.price),
-        stock: Number(form.stock),
-        image: form.image,
-      },
+      product: payload,
     })
 
     setMessage(result.message)

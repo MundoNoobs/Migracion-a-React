@@ -17,13 +17,6 @@ const highlights = [
   },
 ]
 
-const quickActions = [
-  { key: 'login', label: 'Ir a login' },
-  { key: 'register', label: 'Ir a registro' },
-  { key: 'profile', label: 'Ver perfil' },
-  { key: 'seller', label: 'Abrir panel vendedor' },
-]
-
 export default function HomeSection({ products, stores, currentUser, onNavigate, onCheckout }) {
   const [cartItems, setCartItems] = useState([])
   const [feedback, setFeedback] = useState('')
@@ -78,6 +71,28 @@ export default function HomeSection({ products, stores, currentUser, onNavigate,
     }
   }
 
+  const handleOpenStore = (store) => {
+    if (!currentUser) {
+      onNavigate('login')
+      return
+    }
+
+    setFeedback(`Tienda seleccionada: ${store.name}`)
+  }
+
+  const quickActions = currentUser
+    ? [
+        { key: 'profile', label: 'Ver perfil' },
+        ...(currentUser.role === 'admin' ? [{ key: 'admin', label: 'Panel administrador' }] : []),
+        ...(currentUser.role === 'seller' ? [{ key: 'seller', label: 'Abrir panel vendedor' }] : []),
+      ]
+    : [
+        { key: 'login', label: 'Ir a login' },
+        { key: 'register', label: 'Ir a registro' },
+        { key: 'profile', label: 'Ver perfil' },
+        { key: 'seller', label: 'Abrir panel vendedor' },
+      ]
+
   return (
     <section className="section-block" aria-labelledby="home-title">
       <h1 id="home-title" className="page-title">Bienvenido a Zofri</h1>
@@ -124,7 +139,7 @@ export default function HomeSection({ products, stores, currentUser, onNavigate,
         )}
       </div>
 
-      <StoreList stores={stores} />
+      <StoreList stores={stores} onOpenStore={handleOpenStore} />
     </section>
   )
 }

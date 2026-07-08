@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
+import { validateEmail, validateName, validatePassword, validateRequiredFields } from '../../utils/validators'
 
 const sellerFormFields = [
   { id: 'seller-name', label: 'Nombre', key: 'name', type: 'text' },
   { id: 'seller-email', label: 'Correo', key: 'email', type: 'email' },
   { id: 'seller-password', label: 'Contrasena', key: 'password', type: 'password' },
+  { id: 'seller-image', label: 'Imagen de perfil', key: 'profileImage', type: 'text' },
 ]
 
 export default function AdminPanelSection({ users, onCreateSeller }) {
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', profileImage: '' })
   const [message, setMessage] = useState('')
 
   const sellers = useMemo(
@@ -17,6 +19,31 @@ export default function AdminPanelSection({ users, onCreateSeller }) {
 
   const handleSubmit = (event) => {
     event.preventDefault()
+
+    const requiredValidation = validateRequiredFields(form, ['name', 'email', 'password'])
+    if (!requiredValidation.ok) {
+      setMessage(requiredValidation.message)
+      return
+    }
+
+    const nameValidation = validateName(form.name)
+    if (!nameValidation.ok) {
+      setMessage(nameValidation.message)
+      return
+    }
+
+    const emailValidation = validateEmail(form.email)
+    if (!emailValidation.ok) {
+      setMessage(emailValidation.message)
+      return
+    }
+
+    const passwordValidation = validatePassword(form.password)
+    if (!passwordValidation.ok) {
+      setMessage(passwordValidation.message)
+      return
+    }
+
     const result = onCreateSeller(form)
 
     if (!result.ok) {
@@ -25,7 +52,7 @@ export default function AdminPanelSection({ users, onCreateSeller }) {
     }
 
     setMessage('Cuenta de vendedor creada y guardada.')
-    setForm({ name: '', email: '', password: '' })
+    setForm({ name: '', email: '', password: '', profileImage: '' })
   }
 
   return (

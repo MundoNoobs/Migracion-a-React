@@ -2,21 +2,27 @@ import '../../styles/Header.css'
 
 export default function Header({
   fontSize,
+  theme,
   isLoggedIn,
   currentUser,
   onFontSizeChange,
+  onToggleTheme,
   onLogout,
   currentSection,
   onSectionChange,
 }) {
-  const navigationSections = [
-    { key: 'home', label: 'Inicio' },
-    { key: 'login', label: 'Login' },
-    { key: 'register', label: 'Registro' },
-    { key: 'profile', label: 'Perfil de usuario' },
-  ]
+  const navigationSections = [{ key: 'home', label: 'Inicio' }]
 
-  if (currentUser && ['seller', 'admin'].includes(currentUser.role)) {
+  if (!isLoggedIn) {
+    navigationSections.push({ key: 'login', label: 'Login' })
+    navigationSections.push({ key: 'register', label: 'Registro' })
+  }
+
+  if (isLoggedIn) {
+    navigationSections.push({ key: 'profile', label: 'Perfil de usuario' })
+  }
+
+  if (currentUser?.role === 'seller') {
     navigationSections.push({ key: 'seller', label: 'Panel vendedor' })
   }
 
@@ -82,6 +88,14 @@ export default function Header({
               onClick={() => onFontSizeChange(16)}
             >
               A+
+            </button>
+            <button
+              type="button"
+              aria-label="Activar modo oscuro"
+              aria-pressed={theme === 'dark'}
+              onClick={onToggleTheme}
+            >
+              {theme === 'dark' ? 'Claro' : 'Oscuro'}
             </button>
           </div>
         </div>

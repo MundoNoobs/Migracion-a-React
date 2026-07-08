@@ -8,16 +8,27 @@ import UserProfileSection from './components/sections/UserProfileSection'
 import SellerPanelSection from './components/sections/SellerPanelSection'
 import AdminPanelSection from './components/sections/AdminPanelSection'
 import { initializeAppStorage, storageApi } from './data/storage'
+import {
+  validateCartItems,
+  validateEmail,
+  validateName,
+  validateOrderStatus,
+  validatePassword,
+  validateProductPayload,
+  validateRequiredFields,
+} from './utils/validators'
 import './App.css'
 
 function App() {
   const [bootstrap] = useState(() => initializeAppStorage())
   const [fontSize, setFontSize] = useState(14)
+  const [theme, setTheme] = useState(
+    () => storageApi.readStorage(storageApi.keys.theme, ['light'])[0] ?? 'light',
+  )
   const [currentSection, setCurrentSection] = useState('home')
   const [users, setUsers] = useState(bootstrap.users)
   const [products, setProducts] = useState(bootstrap.products)
   const [orders, setOrders] = useState(bootstrap.orders)
-  const [stores] = useState(bootstrap.stores)
   const [sessionEmail, setSessionEmail] = useState(bootstrap.session?.email ?? null)
   const [rememberMe, setRememberMe] = useState(Boolean(bootstrap.session?.remember))
 
@@ -44,13 +55,22 @@ function App() {
     storageApi.removeStorage(storageApi.keys.session)
   }, [rememberMe, sessionEmail])
 
+  useEffect(() => {
+    storageApi.writeStorage(storageApi.keys.theme, [theme])
+  }, [theme])
+
   const navigateToSection = (section) => {
+    if (currentUser && (section === 'login' || section === 'register')) {
+      setCurrentSection('profile')
+      return
+    }
+
     if ((section === 'seller' || section === 'admin') && !currentUser) {
       setCurrentSection('login')
       return
     }
 
-    if (section === 'seller' && !['seller', 'admin'].includes(currentUser?.role)) {
+    if (section === 'seller' && currentUser?.role !== 'seller') {
       setCurrentSection('profile')
       return
     }
@@ -64,6 +84,16 @@ function App() {
   }
 
   const handleLogin = ({ email, password, remember }) => {
+    const requiredValidation = validateRequiredFields({ email, password }, ['email', 'password'])
+    if (!requiredValidation.ok) {
+      return requiredValidation
+    }
+
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.ok) {
+      return emailValidation
+    }
+
     const foundUser = users.find((candidate) => candidate.email === email)
 
     if (!foundUser) {
@@ -76,7 +106,7 @@ function App() {
 
     setSessionEmail(foundUser.email)
     setRememberMe(remember)
-    setCurrentSection(foundUser.role === 'admin' ? 'admin' : foundUser.role === 'seller' ? 'seller' : 'profile')
+    setCurrentSection('home')
 
     return { ok: true, user: foundUser }
   }
@@ -88,6 +118,29 @@ function App() {
   }
 
   const handleRegisterBuyer = ({ name, email, password }) => {
+    const requiredValidation = validateRequiredFields(
+      { name, email, password },
+      ['name', 'email', 'password'],
+    )
+    if (!requiredValidation.ok) {
+      return requiredValidation
+    }
+
+    const nameValidation = validateName(name)
+    if (!nameValidation.ok) {
+      return nameValidation
+    }
+
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.ok) {
+      return emailValidation
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.ok) {
+      return passwordValidation
+    }
+
     const emailExists = users.some((candidate) => candidate.email === email)
 
     if (emailExists) {
@@ -108,9 +161,32 @@ function App() {
     return { ok: true, message: 'Cuenta creada. Ahora puedes iniciar sesion.' }
   }
 
-  const handleCreateSeller = ({ name, email, password }) => {
+  const handleCreateSeller = ({ name, email, password, profileImage }) => {
     if (currentUser?.role !== 'admin') {
       return { ok: false, message: 'Solo un administrador puede crear vendedores.' }
+    }
+
+    const requiredValidation = validateRequiredFields(
+      { name, email, password },
+      ['name', 'email', 'password'],
+    )
+    if (!requiredValidation.ok) {
+      return requiredValidation
+    }
+
+    const nameValidation = validateName(name)
+    if (!nameValidation.ok) {
+      return nameValidation
+    }
+
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.ok) {
+      return emailValidation
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.ok) {
+      return passwordValidation
     }
 
     if (users.some((candidate) => candidate.email === email)) {
@@ -123,6 +199,8 @@ function App() {
       email,
       password,
       role: 'seller',
+      profileImage:
+        profileImage || `https://via.placeholder.com/300x200?text=${encodeURIComponent(name)}`,
     }
 
     setUsers((previous) => [...previous, newSeller])
@@ -133,6 +211,29 @@ function App() {
   const handleUpdateProfile = ({ name, email, password }) => {
     if (!currentUser) {
       return { ok: false, message: 'Debes iniciar sesion.' }
+    }
+
+    const requiredValidation = validateRequiredFields(
+      { name, email, password },
+      ['name', 'email', 'password'],
+    )
+    if (!requiredValidation.ok) {
+      return requiredValidation
+    }
+
+    const nameValidation = validateName(name)
+    if (!nameValidation.ok) {
+      return nameValidation
+    }
+
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.ok) {
+      return emailValidation
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.ok) {
+      return passwordValidation
     }
 
     if (users.some((candidate) => candidate.email === email && candidate.id !== currentUser.id)) {
@@ -156,8 +257,9 @@ function App() {
       return { ok: false, message: 'Debes iniciar sesion para comprar.' }
     }
 
-    if (!cartItems.length) {
-      return { ok: false, message: 'El carrito esta vacio.' }
+    const cartValidation = validateCartItems(cartItems)
+    if (!cartValidation.ok) {
+      return cartValidation
     }
 
     const stockIssue = cartItems.find((cartItem) => {
@@ -221,6 +323,11 @@ function App() {
   }
 
   const handleUpdateOrderStatus = (orderId, status) => {
+    const statusValidation = validateOrderStatus(status)
+    if (!statusValidation.ok) {
+      return statusValidation
+    }
+
     setOrders((previous) =>
       previous.map((order) => {
         const canEditOrder =
@@ -243,6 +350,11 @@ function App() {
   }
 
   const handleMarkDelivered = (orderId) => {
+    const statusValidation = validateOrderStatus('entregado')
+    if (!statusValidation.ok) {
+      return statusValidation
+    }
+
     setOrders((previous) =>
       previous.map((order) => {
         if (order.id !== orderId || order.customerEmail !== currentUser?.email) {
@@ -261,8 +373,13 @@ function App() {
   }
 
   const handleCreateProduct = ({ product, productId }) => {
-    if (!currentUser || !['seller', 'admin'].includes(currentUser.role)) {
+    if (!currentUser || currentUser.role !== 'seller') {
       return { ok: false, message: 'No tienes permisos para publicar productos.' }
+    }
+
+    const productValidation = validateProductPayload(product)
+    if (!productValidation.ok) {
+      return productValidation
     }
 
     if (productId) {
@@ -302,6 +419,39 @@ function App() {
   const currentUserOrders = useMemo(
     () => orders.filter((order) => order.customerEmail === currentUser?.email),
     [currentUser?.email, orders],
+  )
+
+  const sellerUserMap = useMemo(
+    () => users.filter((user) => user.role === 'seller').reduce((accumulator, seller) => {
+      accumulator[seller.email] = seller
+      return accumulator
+    }, {}),
+    [users],
+  )
+
+  const homeProducts = useMemo(
+    () =>
+      products
+        .filter((product) => Boolean(sellerUserMap[product.ownerEmail]))
+        .map((product) => ({
+          ...product,
+          sellerName: sellerUserMap[product.ownerEmail]?.name ?? 'Vendedor',
+        })),
+    [products, sellerUserMap],
+  )
+
+  const sellerStores = useMemo(
+    () =>
+      users
+        .filter((user) => user.role === 'seller')
+        .map((seller) => ({
+          id: seller.id,
+          name: seller.name,
+          image: seller.profileImage || `https://via.placeholder.com/300x200?text=${encodeURIComponent(seller.name)}`,
+          email: seller.email,
+        }))
+        .filter((seller) => !bootstrap.legacyStoreNames?.includes(seller.name)),
+    [bootstrap.legacyStoreNames, users],
   )
 
   const sellerOrders = useMemo(
@@ -354,8 +504,8 @@ function App() {
       default:
         return (
           <HomeSection
-            products={products}
-            stores={stores}
+            products={homeProducts}
+            stores={sellerStores}
             currentUser={currentUser}
             onNavigate={navigateToSection}
             onCheckout={handleCheckout}
@@ -365,10 +515,15 @@ function App() {
   })()
 
   return (
-    <div className="app-shell" style={{ '--base-font-size': `${fontSize}px` }}>
+    <div
+      className={`app-shell${theme === 'dark' ? ' dark' : ''}`}
+      style={{ '--base-font-size': `${fontSize}px` }}
+    >
       <Header
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
+        theme={theme}
+        onToggleTheme={() => setTheme((previous) => (previous === 'dark' ? 'light' : 'dark'))}
         isLoggedIn={Boolean(currentUser)}
         currentUser={currentUser}
         onLogout={handleLogout}

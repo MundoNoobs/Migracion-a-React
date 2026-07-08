@@ -7,16 +7,17 @@
 }
 
 .grid .card {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
   transition: box-shadow 0.3s, transform 0.3s;
   cursor: pointer;
+  background: var(--surface-card);
 }
 
 .grid .card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px var(--shadow-color);
   transform: translateY(-2px);
 }
 
@@ -29,7 +30,7 @@
 
 .grid .card h4 {
   margin: 1rem;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.1rem;
   white-space: nowrap;
   overflow: hidden;
@@ -38,7 +39,7 @@
 
 .grid .card p {
   margin: 0 1rem 1rem;
-  color: #666;
+  color: var(--muted-text);
   font-size: 1.2rem;
   font-weight: bold;
 }
@@ -52,7 +53,9 @@
 
 .grid .card .product-quantity input {
   padding: 0.5rem;
-  border: 1px solid #ccd3db;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--text-color);
   border-radius: 6px;
 }
 
